@@ -53,7 +53,7 @@ if get_gsc_file is not None:
 
     for index, row in df.iterrows():
         keyword = row['Top queries']
-        pytrends = TrendReq(hl='en-US', tz=360)
+        pytrends = TrendReq(hl='es-MX', tz=-480)
         kw_list = [keyword]
         try:
             df2 = fetch_trends_with_retry(pytrends, kw_list, timeframe, geo)
