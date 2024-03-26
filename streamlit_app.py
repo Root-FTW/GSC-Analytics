@@ -16,7 +16,7 @@ st.markdown("---")
 
 sortby = st.selectbox('Sort keywords by', ('Clicks', 'Impressions', 'CTR', 'Position'))
 cutoff = st.number_input('Number of queries', min_value=1, max_value=200, value=10)
-pause = st.number_input('Pause between calls', min_value=1, max_value=5, value=2)
+pause = st.number_input('Pause between calls', min_value=1, max_value=60, value=10)  # Ajustado para permitir pausas más largas
 timeframe = st.selectbox('Timeframe', ('today 1-m', 'today 3-m', 'today 12-m'))
 geo = st.selectbox('Geo', ('World', 'US', 'Mexico'))
 
@@ -33,9 +33,9 @@ def fetch_trends_with_retry(pytrends, kw_list, timeframe, geo, retries=3, backof
             pytrends.build_payload(kw_list, cat=0, timeframe=timeframe, geo=geo, gprop='')
             return pytrends.interest_over_time()
         except Exception as e:
-            print(f"Error: {e}. Attempt {attempt + 1} of {retries}.")
+            print(f"Error fetching trends for {kw_list}: {e}. Attempt {attempt + 1} of {retries}.")
             time.sleep((backoff_factor ** attempt) * pause)
-    raise Exception("Max retries reached, unable to fetch trends")
+    raise Exception(f"Max retries reached for {kw_list}, unable to fetch trends.")
 
 if get_gsc_file is not None:
     st.write("Data upload successful, processing... 😎")
@@ -53,7 +53,8 @@ if get_gsc_file is not None:
 
     for index, row in df.iterrows():
         keyword = row['Top queries']
-        pytrends = TrendReq(hl='es-MX', tz=-480)
+        print(f"Processing keyword: {keyword}")  # Añadido para depuración
+        pytrends = TrendReq(hl='es-MX', tz=-480)  # Ajustado para español de México y zona horaria del Pacífico
         kw_list = [keyword]
         try:
             df2 = fetch_trends_with_retry(pytrends, kw_list, timeframe, geo)
@@ -107,4 +108,4 @@ if get_gsc_file is not None:
     st.markdown(get_csv_download_link(df3.data, "gsc-keyword-trends"), unsafe_allow_html=True)
     st.dataframe(df3.data)
 
-st.write('Author: [Jonathan Paz](https://www.linkedin.com/in/jonathanftw/)')
+st.write('Author: [Your Name](https://www.linkedin.com/in/yourprofile/)')
