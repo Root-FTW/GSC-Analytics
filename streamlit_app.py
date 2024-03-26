@@ -66,9 +66,9 @@ timeframe = st.selectbox('Timeframe', ('today 1-m', 'today 3-m', 'today 12-m'))
 geo = st.selectbox('Geo', ('World', 'US', 'Mexico'))
 
 if geo == 'World':
-  geo = ''
+    geo = ''
 elif geo == 'Mexico':
-  geo = 'MX'
+    geo = 'MX'
 
 get_gsc_file = st.file_uploader("Upload GSC CSV file", type=['csv'])
 
