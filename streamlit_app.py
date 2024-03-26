@@ -52,7 +52,7 @@ if get_gsc_file is not None:
     up, down, flat, na = 0, 0, 0, 0
 
     for index, row in df.iterrows():
-        keyword = row['Top Queries']
+        keyword = row['Top queries']
         pytrends = TrendReq(hl='en-US', tz=360)
         kw_list = [keyword]
         try:
