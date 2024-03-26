@@ -16,7 +16,7 @@ st.markdown("---")
 
 sortby = st.selectbox('Sort keywords by', ('Clicks', 'Impressions', 'CTR', 'Position'))
 cutoff = st.number_input('Number of queries', min_value=1, max_value=200, value=10)
-pause = st.number_input('Pause between calls', min_value=1, max_value=60, value=10)  # Ajustado para permitir pausas más largas
+pause = st.number_input('Pause between calls', min_value=1, max_value=60, value=10)
 timeframe = st.selectbox('Timeframe', ('today 1-m', 'today 3-m', 'today 12-m'))
 geo = st.selectbox('Geo', ('World', 'US', 'Mexico'))
 
@@ -33,7 +33,7 @@ def fetch_trends_with_retry(pytrends, kw_list, timeframe, geo, retries=3, backof
             pytrends.build_payload(kw_list, cat=0, timeframe=timeframe, geo=geo, gprop='')
             return pytrends.interest_over_time()
         except Exception as e:
-            print(f"Error fetching trends for {kw_list}: {e}. Attempt {attempt + 1} of {retries}.")
+            st.error(f"Error fetching trends for {kw_list}: {e}. Attempt {attempt + 1} of {retries}.")
             time.sleep((backoff_factor ** attempt) * pause)
     raise Exception(f"Max retries reached for {kw_list}, unable to fetch trends.")
 
@@ -51,10 +51,15 @@ if get_gsc_file is not None:
     metric = df[sortby].tolist()
     up, down, flat, na = 0, 0, 0, 0
 
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    total_keywords = len(df)
+    
     for index, row in df.iterrows():
         keyword = row['Top queries']
-        print(f"Processing keyword: {keyword}")  # Añadido para depuración
-        pytrends = TrendReq(hl='es-MX', tz=-480)  # Ajustado para español de México y zona horaria del Pacífico
+        status_text.text(f"Processing keyword: {keyword}")
+        
+        pytrends = TrendReq(hl='es-MX', tz=-480)
         kw_list = [keyword]
         try:
             df2 = fetch_trends_with_retry(pytrends, kw_list, timeframe, geo)
@@ -72,10 +77,14 @@ if get_gsc_file is not None:
                 trends.append('FLAT')
                 flat += 1
         except Exception as e:
-            print(f"Unable to fetch trends for {keyword}: {e}")
+            st.error(f"Unable to fetch trends for {keyword}: {e}")
             trends.append('N/A')
             na += 1
         time.sleep(pause)
+        progress_bar.progress((index + 1) / total_keywords)
+
+    status_text.text("Processing complete!")
+    progress_bar.empty()  # Optionally remove the progress bar after completion
 
     df3['Keyword'] = keywords
     df3['Trend'] = trends
